@@ -9,10 +9,9 @@ const nextId = require("../utils/nextId");
 // TODO: Implement the /dishes handlers needed to make the tests pass
 
 function checkId(req, res, next){
-   const {dishId} = req.params;
-   const foundDish = dishes.filter((dish) => dish.id === dishId)
-   console.log(dishId)
-   if(foundDish.length > 0){
+   const { dishId } = req.params;
+   const foundDish = dishes.find((dish) => dish.id === dishId)
+   if(foundDish){
      res.locals.foundUrl = foundDish
      next();
    } else {
