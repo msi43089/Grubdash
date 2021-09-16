@@ -8,6 +8,18 @@ const nextId = require("../utils/nextId");
 
 // TODO: Implement the /dishes handlers needed to make the tests pass
 
+function checkId(req, res, next){
+   const {dishId} = req.params;
+   const foundDish = dishes.filter((dish) => dish.id === dishId)
+   console.log(dishId)
+   if(foundDish.length > 0){
+     res.locals.foundUrl = foundDish
+     next();
+   } else {
+     next({status: 404, message: `Dish does not exist: ${dishId}`})
+   }
+}
+
 function validateName(req, res, next){
     const { data: { name } ={} } = req.body
     if(!name){
@@ -51,28 +63,21 @@ function validateImg(req, res, next){
     }
 }
 
-
-function checkId(req, res, next) {
-    const { dishId } = req.params
-    const foundDish = dishes.find((dish) => dish.id === Number(dishId));
-    if(foundDish){
-        res.locals.foundDish = foundDish
-        res.locals.dishId = Number(dishId)
-        next();
-    } else {
-        next({status: 404, message: `Dish does not exist: ${dishId}`});
-    }
+function create(req, res, next) {
+  const { data: dish = {} } = req.body
+  const newId = nextId()
+  let newDish = {...dish,
+    id: newId   
+  }
+  dishes.push(newDish)
+  res.status(201).json({data: newDish})
 }
 
-function idMatch(req, res, next) {
-    const { data: { id } = {} } = req.body
-    const dishId = Number(req.params.dishId)
-    if(id !== dishId){
-        next({status: 404, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`})
-    }
-    else{
-        next()
-    }
+function read(req, res, next){
+    const { dishId } = req.params
+    const foundDish = dishes.find((dish) => dish.id === dishId)
+    res.json({data: foundDish})
+
 }
 
 function update (req, res, next) {
@@ -90,8 +95,8 @@ function list (req, res, next) {
 
 
 module.exports = {
-        read: [validateName, checkId],
+        read: [read],
         update: [validateName, validateDescription, validateImg, validateImg, validatePrice, checkId, update],
         list,
-        create: [validateName]
+        create: [validateName, validateDescription, validateImg, validateImg, validatePrice, create ]
 }
