@@ -47,9 +47,8 @@ function validateDishes(req, res, next) {
 function validateQuantity(req, res, next){
     const{ data:  { dishes } = {} } = req.body
     const index = dishes.findIndex((dish) => {
-      !dish.quantity || dish.quantity < 0 || !Number.is.Integer(dish.quantity)
-    })
-    if(index){
+      return (!dish.quantity || dish.quantity <= 0 || !Number.isInteger(dish.quantity))})
+    if(index > -1){
       next({status: 400, message: `Dish ${index} must have a quantity that is an integer greater than 0`})
     } else {
       next()
