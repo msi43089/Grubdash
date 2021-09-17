@@ -19,6 +19,16 @@ function checkId(req, res, next){
    }
 }
 
+function matchId(req,res,next){
+  const { dishId } = req.params;
+  const { data: { id } = {} } = req.body
+  if(id && id !== dishId){
+    next({status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`})
+  } else {
+    next()
+  }
+}
+
 function validateName(req, res, next){
     const { data: { name } ={} } = req.body
     if(!name){
@@ -94,8 +104,8 @@ function list (req, res, next) {
 
 
 module.exports = {
-        read: [read],
-        update: [validateName, validateDescription, validateImg, validateImg, validatePrice, checkId, update],
+        read: [checkId, read],
+        update: [checkId, matchId, validateName, validateDescription, validateImg, validateImg, validatePrice, update],
         list,
         create: [validateName, validateDescription, validateImg, validateImg, validatePrice, create ]
 }
