@@ -55,6 +55,49 @@ function validateQuantity(req, res, next){
     }
 }
 
+function checkId(req, res, next){
+    const { orderId } = req.params;
+    const foundOrder = orders.find((order) => order.id === orderId)
+    if(foundOrder){
+      res.locals.foundUrl = foundOrder
+      next();
+    } else {
+      next({status: 404, message: `Order does not exist: ${orderId}`})
+    }
+ }
+
+ function matchId(req,res,next){
+    const { orderId } = req.params;
+    const { data: { id } = {} } = req.body
+    if(id && id !== orderId){
+      next({status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}`})
+    } else {
+      next()
+    }
+  }
+
+  function validateStatus(req, res, next) {
+      const { data: { status } = {} } = req.body;
+      if(status === "pending" ||
+         status === "delivered" || 
+         status === "out-for-delivery" ||
+         status === "preparing"){
+        next()
+      } else {
+        next({status: 400, message: `Order must have a status of pending, preparing, out-for-delivery, delivered`})
+      }
+  }
+
+  function validatePending(req, res, next) {
+    const { orderId } = req.params
+    const foundOrder = orders.find((order) => order.id === orderId)
+    if(foundOrder.status === "pending"){
+      next()
+    } else {
+      next({status: 400, message: `An order cannot be deleted unless it is pending`})
+    }
+  }
+
 function list (req, res, next) {
     res.json({data: orders})
 }
@@ -91,8 +134,24 @@ function create(req, res, next) {
 
 module.exports = {
   list,
-  read: [read],
-  create: [validateDeliverTo, validateMobile, validateDish, validateDishes, validateQuantity, create],
-  delete: [destroy],
-  update: [update]
+  read: [checkId, read],
+  create: [validateDeliverTo,
+           validateMobile, 
+           validateDish, 
+           validateDishes, 
+           validateQuantity, 
+           create],
+  delete: [checkId,
+           validatePending,
+    destroy],
+  update: [
+      checkId, 
+      validateDeliverTo, 
+      validateMobile, 
+      validateDish, 
+      validateDishes, 
+      validateQuantity, 
+      validateStatus,
+      matchId,  
+      update]
 }
